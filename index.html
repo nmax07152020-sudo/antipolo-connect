@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0b63ce" />
+  <meta name="description" content="Antipolo Connect - Employee social network for City Health Office." />
+  <title>Antipolo Connect</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='47' fill='%230b63ce'/%3E%3Cpath d='M50 16v68M25 30l50 40M75 30L25 70' stroke='white' stroke-width='8'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- AUTH -->
+  <section id="authView" class="auth-shell">
+    <div class="auth-brand-panel">
+      <div class="brand-lockup">
+        <div class="brand-mark">❤</div>
+        <div>
+          <div class="brand-small">CITY HEALTH OFFICE</div>
+          <div class="brand-name">ANTIPOLO <span>CONNECT</span></div>
+        </div>
+      </div>
+      <div class="hero-copy">
+        <p class="eyebrow">EMPLOYEE COMMUNITY PLATFORM</p>
+        <h1>One Team.<br />One Purpose.<br /><span>A Healthier Antipolo.</span></h1>
+        <p>Connect, share announcements, celebrate milestones, and stay informed with your fellow City Health Office employees.</p>
+      </div>
+      <div class="hero-pills">
+        <span>People</span><span>Community</span><span>Updates</span>
+      </div>
+    </div>
+
+    <div class="auth-card-wrap">
+      <div class="auth-card">
+        <div class="mobile-brand">
+          <div class="brand-mark">❤</div>
+          <strong>ANTIPOLO <span>CONNECT</span></strong>
+        </div>
+
+        <div id="loginPanel">
+          <div class="form-heading">
+            <h2>Welcome back!</h2>
+            <p>Sign in to your Antipolo Connect account.</p>
+          </div>
+          <form id="loginForm" novalidate>
+            <label>Username or Email
+              <input id="loginEmail" type="email" autocomplete="username" required placeholder="name@antipolo.gov.ph" />
+            </label>
+            <label>Password
+              <div class="password-wrap"><input id="loginPassword" type="password" autocomplete="current-password" required placeholder="Enter password" /><button type="button" class="eye" data-target="loginPassword">◉</button></div>
+            </label>
+            <div class="form-row"><label class="check"><input id="rememberMe" type="checkbox" /> Remember me</label><button id="forgotBtn" type="button" class="link-btn">Forgot password?</button></div>
+            <button class="primary-btn" type="submit">Login</button>
+          </form>
+          <div class="or"><span>or</span></div>
+          <button id="demoLoginBtn" class="secondary-btn">Preview Demo Dashboard</button>
+          <p class="switch-text">Don't have an account? <button id="showRegister" class="link-btn">Register here</button></p>
+        </div>
+
+        <div id="registerPanel" class="hidden">
+          <div class="form-heading">
+            <h2>Create your account</h2>
+            <p>Join the Antipolo Health Family.</p>
+          </div>
+          <form id="registerForm" novalidate>
+            <div class="grid-2">
+              <label>Employee ID<input id="regEmployeeId" required placeholder="e.g. CHO-0001" /></label>
+              <label>Full Name<input id="regFullName" required placeholder="Full name" /></label>
+            </div>
+            <div class="grid-2">
+              <label>Office / Unit<select id="regUnit" required><option value="">Select unit</option><option>Nursing Division</option><option>Sanitation Unit</option><option>Nutrition Unit</option><option>Administrative Unit</option><option>Health Education</option><option>Patient Navigation & Referral Unit</option><option>Other</option></select></label>
+              <label>Position<input id="regPosition" required placeholder="Position / designation" /></label>
+            </div>
+            <div class="grid-2">
+              <label>Email Address<input id="regEmail" type="email" required placeholder="name@antipolo.gov.ph" /></label>
+              <label>Contact Number<input id="regContact" type="tel" required placeholder="09XXXXXXXXX" /></label>
+            </div>
+            <div class="grid-2">
+              <label>Username<input id="regUsername" required placeholder="Choose username" /></label>
+              <label>Password<div class="password-wrap"><input id="regPassword" type="password" required minlength="6" placeholder="At least 6 characters" /><button type="button" class="eye" data-target="regPassword">◉</button></div></label>
+            </div>
+            <label>Confirm Password<input id="regConfirm" type="password" required placeholder="Repeat password" /></label>
+            <label class="consent"><input id="regConsent" type="checkbox" required /> I confirm that the information provided is accurate and that I am an authorized City Health Office employee.</label>
+            <button class="primary-btn" type="submit">Submit Registration</button>
+          </form>
+          <p class="switch-text">Already registered? <button id="showLogin" class="link-btn">Login here</button></p>
+        </div>
+      </div>
+      <p class="auth-footer">Private employee community • Registration requires administrator approval</p>
+    </div>
+  </section>
+
+  <!-- APP -->
+  <section id="appView" class="app-shell hidden">
+    <header class="topbar">
+      <div class="topbar-brand"><div class="mini-mark">❤</div><div><strong>ANTIPOLO <span>CONNECT</span></strong><small>City Health Office</small></div></div>
+      <div class="topbar-search"><span>⌕</span><input id="globalSearch" placeholder="Search people, posts, announcements..." /></div>
+      <nav class="top-actions"><button title="Notifications" id="notifBtn">🔔<b class="count">3</b></button><button title="Messages" id="messageBtn">💬</button><button title="Profile" id="profileBtn"><span class="avatar avatar-sm">EA</span></button></nav>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar">
+        <button class="nav-item active" data-page="home">⌂ <span>Home</span></button>
+        <button class="nav-item" data-page="profile">◉ <span>My Profile</span></button>
+        <button class="nav-item" data-page="directory">👥 <span>Employee Directory</span></button>
+        <button class="nav-item" data-page="announcements">📢 <span>Announcements</span></button>
+        <button class="nav-item" data-page="events">📅 <span>Events</span></button>
+        <button class="nav-item" data-page="groups">▦ <span>Groups / Units</span></button>
+        <button class="nav-item" data-page="messages">✉ <span>Messages</span></button>
+        <button class="nav-item" data-page="saved">🔖 <span>Saved</span></button>
+        <div class="sidebar-divider"></div>
+        <button class="nav-item" data-page="settings">⚙ <span>Settings</span></button>
+        <button class="nav-item admin-only" data-page="admin">🛡 <span>Admin Dashboard</span></button>
+        <div class="sidebar-bottom"><small>Antipolo Connect V1</small><small>Employee-only platform</small><button id="logoutBtn" class="logout-btn">↪ Sign out</button></div>
+      </aside>
+
+      <main id="pageContent" class="content"></main>
+      <aside class="right-rail" id="rightRail"></aside>
+    </div>
+
+    <nav class="mobile-nav"><button data-page="home">⌂<small>Home</small></button><button data-page="directory">👥<small>Staff</small></button><button id="mobileCreate">＋<small>Post</small></button><button data-page="notifications">🔔<small>Alerts</small></button><button data-page="profile">◉<small>Profile</small></button></nav>
+  </section>
+
+  <!-- MODALS -->
+  <div id="modal" class="modal hidden"><div class="modal-backdrop"></div><div class="modal-card"><button class="modal-close" id="modalClose">×</button><div id="modalContent"></div></div></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

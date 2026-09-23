@@ -1,0 +1,50 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function userDoc(uid) { return get(/databases/$(database)/documents/users/$(uid)); }
+    function approved() { return signedIn() && userDoc(request.auth.uid).data.status == 'approved'; }
+    function admin() { return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)); }
+
+    match /users/{uid} {
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.role == 'employee'
+        && request.resource.data.status == 'pending';
+      allow read: if admin() || (signedIn() && request.auth.uid == uid) || approved();
+      allow update: if admin() || (signedIn() && request.auth.uid == uid && request.resource.data.role == resource.data.role && request.resource.data.status == resource.data.status);
+      allow delete: if admin();
+    }
+
+    match /admins/{uid} {
+      allow read: if admin() && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    match /posts/{postId} {
+      allow read: if approved() || admin();
+      allow create: if approved() && request.resource.data.authorUid == request.auth.uid;
+      allow update, delete: if admin() || (approved() && resource.data.authorUid == request.auth.uid);
+    }
+
+    match /comments/{commentId} {
+      allow read: if approved() || admin();
+      allow create: if approved() && request.resource.data.authorUid == request.auth.uid;
+      allow update, delete: if admin() || (approved() && resource.data.authorUid == request.auth.uid);
+    }
+
+    match /announcements/{id} {
+      allow read: if approved() || admin();
+      allow write: if admin();
+    }
+
+    match /events/{id} {
+      allow read: if approved() || admin();
+      allow write: if admin();
+    }
+
+    match /groups/{id} {
+      allow read: if approved() || admin();
+      allow write: if admin();
+    }
+  }
+}
