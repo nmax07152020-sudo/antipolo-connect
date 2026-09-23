@@ -1,26 +1,19 @@
-# Antipolo Connect V2 — Firebase Employee Approval
+# Antipolo Connect — Clean V2
 
-This version connects the Admin Dashboard to Firestore employee records.
+Clean employee-community build for the Antipolo City Health Office.
 
-## What's real in V2
-- Firebase Email/Password login
-- Firebase registration creates `users/{uid}` with `status: pending`
-- Admin Dashboard loads real `users` from Firestore
-- Live total user and pending approval counts
-- Admin can Approve or Reject pending registrations
-- Admin role is protected by the `admins/{uid}` record and `active: true` + `role: admin`
+## Clean-up included
+- Removed all hard-coded demo posts, announcements, events, birthdays, groups, notifications, employee names, profile counts, and demo dashboard login.
+- Home feed, announcements, events, groups, messages, saved items, and notifications use empty states until real data is published.
+- Employee Directory loads approved employees from Firestore.
+- Admin Dashboard loads registrations from Firestore and supports Approve/Reject.
+- Firebase Authentication + Firestore configuration retained.
+- Enhanced City Health Office branding and responsive UI retained.
 
-## Firebase setup
-- Project: `antipolo-connect-web`
-- Firestore database: `(default)`
-- Authentication: Email/Password enabled
-- Publish `firestore.rules` in Firebase Console after any rules changes
-
-## Admin record
-Use the admin Auth UID as the document ID in `admins` and set:
-- `role`: `admin` (string)
-- `active`: `true` (boolean)
-- `email`: admin email
-- `fullName`: admin full name
-
-The same UID should have a `users/{uid}` record with `role: admin` and `status: approved`.
+## Files
+- index.html — enhanced UI
+- app.js — clean Firebase-connected behavior
+- firebase.js — existing Firebase web configuration
+- firestore.rules — existing Firestore rules
+- styles.css — existing styles
+- vercel.json — Vercel configuration
