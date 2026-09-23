@@ -1,46 +1,26 @@
-# Antipolo Connect V1
+# Antipolo Connect V2 — Firebase Employee Approval
 
-Responsive employee-only social network starter for a City Health Office. Built as a static web app with Firebase Authentication + Cloud Firestore, deployable to GitHub and Vercel/Firebase Hosting.
+This version connects the Admin Dashboard to Firestore employee records.
 
-## What's included
-- Responsive login / registration UI
-- Pending approval registration flow
-- Demo dashboard mode (works before Firebase setup)
-- Facebook-style home feed UI
-- Employee directory
-- Announcements
-- Events
-- Groups / Units
-- Profile
-- Settings
-- Admin dashboard UI
-- Firestore security rules starter
-- Mobile bottom navigation
+## What's real in V2
+- Firebase Email/Password login
+- Firebase registration creates `users/{uid}` with `status: pending`
+- Admin Dashboard loads real `users` from Firestore
+- Live total user and pending approval counts
+- Admin can Approve or Reject pending registrations
+- Admin role is protected by the `admins/{uid}` record and `active: true` + `role: admin`
 
 ## Firebase setup
-1. Create a Firebase project.
-2. Add a Web App.
-3. Enable Authentication > Sign-in method > Email/Password.
-4. Create a Cloud Firestore database.
-5. Copy the Firebase Web App config into `firebase.js`.
-6. Deploy `firestore.rules` as your Firestore rules.
-7. Create one admin account normally through the app.
-8. In Firestore console, create `admins/{ADMIN_UID}`. The document can contain `{ "role": "admin" }`.
-9. Update that admin user's `users/{ADMIN_UID}` document to `status: "approved"` and `role: "admin"`.
+- Project: `antipolo-connect-web`
+- Firestore database: `(default)`
+- Authentication: Email/Password enabled
+- Publish `firestore.rules` in Firebase Console after any rules changes
 
-## Important security note
-Never place a Firebase Admin SDK service-account private key in frontend files. Firebase Web App config values are intended for client initialization; access control is enforced by Authentication and Firestore Security Rules.
+## Admin record
+Use the admin Auth UID as the document ID in `admins` and set:
+- `role`: `admin` (string)
+- `active`: `true` (boolean)
+- `email`: admin email
+- `fullName`: admin full name
 
-## Local preview
-Because `app.js` is an ES module, open the project through a local web server instead of `file://`.
-
-Example:
-
-```bash
-python -m http.server 8080
-```
-
-Then open `http://localhost:8080`.
-
-## Vercel
-Import the GitHub repository into Vercel. This project is a static site and does not require a build command.
+The same UID should have a `users/{uid}` record with `role: admin` and `status: approved`.

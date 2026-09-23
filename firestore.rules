@@ -1,50 +1,90 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    function signedIn() { return request.auth != null; }
-    function userDoc(uid) { return get(/databases/$(database)/documents/users/$(uid)); }
-    function approved() { return signedIn() && userDoc(request.auth.uid).data.status == 'approved'; }
-    function admin() { return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid)); }
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active == true
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role == "admin";
+    }
+
+    function isApprovedEmployee() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == "approved";
+    }
 
     match /users/{uid} {
-      allow create: if signedIn() && request.auth.uid == uid
-        && request.resource.data.role == 'employee'
-        && request.resource.data.status == 'pending';
-      allow read: if admin() || (signedIn() && request.auth.uid == uid) || approved();
-      allow update: if admin() || (signedIn() && request.auth.uid == uid && request.resource.data.role == resource.data.role && request.resource.data.status == resource.data.status);
-      allow delete: if admin();
+      allow create: if signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.role == "employee"
+        && request.resource.data.status == "pending";
+
+      allow read: if isAdmin()
+        || (signedIn() && request.auth.uid == uid)
+        || isApprovedEmployee();
+
+      allow update: if isAdmin()
+        || (
+          signedIn()
+          && request.auth.uid == uid
+          && request.resource.data.role == resource.data.role
+          && request.resource.data.status == resource.data.status
+        );
+
+      allow delete: if isAdmin();
     }
 
     match /admins/{uid} {
-      allow read: if admin() && request.auth.uid == uid;
+      allow read: if isAdmin() && request.auth.uid == uid;
       allow write: if false;
     }
 
     match /posts/{postId} {
-      allow read: if approved() || admin();
-      allow create: if approved() && request.resource.data.authorUid == request.auth.uid;
-      allow update, delete: if admin() || (approved() && resource.data.authorUid == request.auth.uid);
+      allow read: if isApprovedEmployee() || isAdmin();
+      allow create: if isApprovedEmployee()
+        && request.resource.data.authorUid == request.auth.uid;
+      allow update, delete: if isAdmin()
+        || (isApprovedEmployee() && resource.data.authorUid == request.auth.uid);
     }
 
     match /comments/{commentId} {
-      allow read: if approved() || admin();
-      allow create: if approved() && request.resource.data.authorUid == request.auth.uid;
-      allow update, delete: if admin() || (approved() && resource.data.authorUid == request.auth.uid);
+      allow read: if isApprovedEmployee() || isAdmin();
+      allow create: if isApprovedEmployee()
+        && request.resource.data.authorUid == request.auth.uid;
+      allow update, delete: if isAdmin()
+        || (isApprovedEmployee() && resource.data.authorUid == request.auth.uid);
     }
 
     match /announcements/{id} {
-      allow read: if approved() || admin();
-      allow write: if admin();
+      allow read: if isApprovedEmployee() || isAdmin();
+      allow write: if isAdmin();
     }
 
     match /events/{id} {
-      allow read: if approved() || admin();
-      allow write: if admin();
+      allow read: if isApprovedEmployee() || isAdmin();
+      allow write: if isAdmin();
     }
 
     match /groups/{id} {
-      allow read: if approved() || admin();
-      allow write: if admin();
+      allow read: if isApprovedEmployee() || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /notifications/{id} {
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.recipientUid == request.auth.uid);
+      allow create: if isAdmin();
+      allow update: if signedIn()
+        && resource.data.recipientUid == request.auth.uid;
+      allow delete: if isAdmin()
+        || (signedIn() && resource.data.recipientUid == request.auth.uid);
     }
   }
 }

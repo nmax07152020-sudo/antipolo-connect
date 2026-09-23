@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 import { firebaseConfig, isFirebaseConfigured } from "./firebase.js";
 
 const state = {
@@ -150,14 +150,44 @@ function groupsPage(){ return `<div class="page-head"><div><h1>Groups / Units</h
 function messagesPage(){ return `<div class="page-head"><div><h1>Messages</h1><p>Private employee conversations will be enabled in the next module.</p></div></div><div class="feed-empty">💬<h3>Messaging module ready for Phase 2</h3><p>We can add one-to-one and group messaging after the core employee approval and feed system is stable.</p></div>`; }
 function savedPage(){ return `<div class="page-head"><div><h1>Saved</h1><p>Your saved posts and documents.</p></div></div><div class="feed-empty">🔖<h3>No saved items yet</h3><p>Saved posts will appear here.</p></div>`; }
 function settingsPage(){ return `<div class="page-head"><div><h1>Settings</h1><p>Manage your account preferences.</p></div></div><div class="settings-row"><div><strong>Push notifications</strong><p>Receive alerts for announcements and mentions.</p></div><button class="switch on"></button></div><div class="settings-row"><div><strong>Compact mode</strong><p>Show a denser feed on smaller screens.</p></div><button class="switch"></button></div><div class="settings-row"><div><strong>Change password</strong><p>Use Firebase password reset for your account.</p></div><button class="chip-btn" id="changePassBtn">Manage</button></div>`; }
-function adminPage(){ if(!state.isAdmin)return `<div class="feed-empty"><h3>Admin access only</h3></div>`; return `<div class="page-head"><div><h1>Admin Dashboard</h1><p>Manage Antipolo Connect employee access and content.</p></div><span class="tag">ADMIN</span></div><div class="admin-stats"><div class="admin-stat"><small>Total users</small><b>356</b></div><div class="admin-stat"><small>Pending approvals</small><b>5</b></div><div class="admin-stat"><small>Total posts</small><b>128</b></div><div class="admin-stat"><small>Upcoming events</small><b>12</b></div></div><div class="admin-card"><div style="padding:16px 16px 0"><h3>Recent Registrations</h3><p class="muted" style="font-size:11px">Approve employees only after verifying official staff information.</p></div><div class="table-wrap"><table class="admin-table"><thead><tr><th>Name</th><th>Unit</th><th>Position</th><th>Status</th><th>Action</th></tr></thead><tbody>${demoUsers.slice(0,4).map(x=>`<tr><td>${x.fullName}</td><td>${x.unit}</td><td>${x.position}</td><td><span class="status ${x.status}">${x.status}</span></td><td>${x.status==='pending'?'<button class="chip-btn approve-demo">Approve</button>':'<span class="muted">Active</span>'}</td></tr>`).join('')}</tbody></table></div></div>`; }
+async function loadAdminData(){
+  if(!state.isAdmin) return {users:[], total:0, pending:0};
+  if(state.demo) return {users:demoUsers.slice(), total:demoUsers.length, pending:demoUsers.filter(x=>x.status==='pending').length};
+  const snap=await getDocs(collection(db,"users"));
+  const users=snap.docs.map(d=>({uid:d.id,...d.data()}));
+  users.sort((a,b)=>{
+    const aT=typeof a.createdAt==='number'?a.createdAt:0;
+    const bT=typeof b.createdAt==='number'?b.createdAt:0;
+    return bT-aT;
+  });
+  return {users, total:users.length, pending:users.filter(x=>x.status==='pending').length};
+}
+
+async function adminPage(){
+  if(!state.isAdmin)return `<div class="feed-empty"><h3>Admin access only</h3></div>`;
+  let data;
+  try { data=await loadAdminData(); }
+  catch(e){ return `<div class="feed-empty"><h3>Unable to load admin data</h3><p class="muted">${e.message||'Please check your Firestore rules.'}</p></div>`; }
+  const rows=data.users.slice(0,10).map(x=>{
+    const safeUid=x.uid||'';
+    const action=x.status==='pending'
+      ? `<button class="chip-btn approve-user" data-uid="${safeUid}">Approve</button> <button class="chip-btn reject-user" data-uid="${safeUid}">Reject</button>`
+      : `<span class="muted">${x.status==='approved'?'Active':'—'}</span>`;
+    return `<tr><td>${x.fullName||'—'}</td><td>${x.unit||'—'}</td><td>${x.position||'—'}</td><td><span class="status ${x.status||'pending'}">${x.status||'pending'}</span></td><td>${action}</td></tr>`;
+  }).join('');
+  return `<div class="page-head"><div><h1>Admin Dashboard</h1><p>Manage Antipolo Connect employee access and content.</p></div><span class="tag">ADMIN</span></div>
+  <div class="admin-stats"><div class="admin-stat"><small>Total users</small><b>${data.total}</b></div><div class="admin-stat"><small>Pending approvals</small><b>${data.pending}</b></div><div class="admin-stat"><small>Total posts</small><b>—</b></div><div class="admin-stat"><small>Upcoming events</small><b>—</b></div></div>
+  <div class="admin-card"><div style="padding:16px 16px 0"><h3>Recent Registrations</h3><p class="muted" style="font-size:11px">Approve employees only after verifying official staff information.</p></div><div class="table-wrap"><table class="admin-table"><thead><tr><th>Name</th><th>Unit</th><th>Position</th><th>Status</th><th>Action</th></tr></thead><tbody>${rows||'<tr><td colspan="5" class="muted">No employee registrations yet.</td></tr>'}</tbody></table></div></div>`;
+}
 function notificationsPage(){ return `<div class="page-head"><div><h1>Notifications</h1><p>Your recent account and community alerts.</p></div></div>${['Antipolo City Health Office mentioned you in an announcement.','New event added: Medical Mission — Sep 28.','Lisa Manuel reacted to your post.'].map((x,i)=>`<div class="settings-row"><div><strong>${x}</strong><p>${i+1} hour${i?'s':''} ago</p></div><span class="tag">NEW</span></div>`).join('')}`; }
 
-function renderPage(){
+async function renderPage(){
   const page=state.currentPage;
   const pages={home:homePage,profile:profilePage,directory:directoryPage,announcements:announcementsPage,events:eventsPage,groups:groupsPage,messages:messagesPage,saved:savedPage,settings:settingsPage,admin:adminPage,notifications:notificationsPage};
-  $("pageContent").innerHTML=(pages[page]||homePage)();
+  const fn=pages[page]||homePage;
+  $("pageContent").innerHTML=await fn();
   $("rightRail").innerHTML=page==='home'?rightRail():'';
+  $$('.admin-only').forEach(btn=>btn.classList.toggle('hidden',!state.isAdmin));
   $$('.nav-item').forEach(btn=>btn.classList.toggle('active',btn.dataset.page===page));
   $$('.mobile-nav button[data-page]').forEach(btn=>btn.classList.toggle('active',btn.dataset.page===page));
   const composer=$("openComposer"); if(composer) composer.addEventListener('click',openComposer);
@@ -166,6 +196,27 @@ function renderPage(){
   const feel=$("feelPost"); if(feel) feel.addEventListener('click',openComposer);
   const change=$("changePassBtn"); if(change) change.addEventListener('click',()=>toast('Use Forgot Password from the login screen for now.'));
   $$('.approve-demo').forEach(b=>b.addEventListener('click',()=>{b.parentElement.innerHTML='<span class="status approved">approved</span>';toast('Demo employee approved.');}));
+  $$('.approve-user').forEach(b=>b.addEventListener('click', async ()=>{
+    const uid=b.dataset.uid;
+    if(!uid || !db || state.demo) return;
+    b.disabled=true;
+    try{
+      await updateDoc(doc(db,'users',uid),{status:'approved',approvedAt:Date.now(),approvedBy:state.user?.uid||null});
+      toast('Employee approved successfully.');
+      await renderPage();
+    }catch(e){ b.disabled=false; toast(`Approval failed: ${e.message||'Unknown error'}`); }
+  }));
+  $$('.reject-user').forEach(b=>b.addEventListener('click', async ()=>{
+    const uid=b.dataset.uid;
+    if(!uid || !db || state.demo) return;
+    if(!confirm('Reject this employee registration?')) return;
+    b.disabled=true;
+    try{
+      await updateDoc(doc(db,'users',uid),{status:'rejected',rejectedAt:Date.now(),rejectedBy:state.user?.uid||null});
+      toast('Registration rejected.');
+      await renderPage();
+    }catch(e){ b.disabled=false; toast(`Rejection failed: ${e.message||'Unknown error'}`); }
+  }));
 }
 
 function openComposer(){
